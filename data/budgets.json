@@ -1,0 +1,83 @@
+[
+  {
+    "category": "Housing",
+    "limit": 1200,
+    "icon": "home",
+    "color": "hsl(168, 76%, 36%)",
+    "id": "1767905157772wfn46d9on",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Entertainment",
+    "limit": 500,
+    "icon": "gamepad-2",
+    "color": "hsl(38, 92%, 50%)",
+    "id": "1767905172092tm44kikmf",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Food & Dining",
+    "limit": 800,
+    "icon": "utensils",
+    "color": "hsl(142, 76%, 36%)",
+    "id": "budget_food_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Transportation",
+    "limit": 400,
+    "icon": "car",
+    "color": "hsl(217, 91%, 60%)",
+    "id": "budget_transport_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Utilities",
+    "limit": 300,
+    "icon": "zap",
+    "color": "hsl(45, 93%, 47%)",
+    "id": "budget_utilities_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Shopping",
+    "limit": 600,
+    "icon": "shopping-bag",
+    "color": "hsl(330, 81%, 60%)",
+    "id": "budget_shopping_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Healthcare",
+    "limit": 300,
+    "icon": "heart",
+    "color": "hsl(0, 84%, 60%)",
+    "id": "budget_healthcare_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Travel",
+    "limit": 1000,
+    "icon": "plane",
+    "color": "hsl(200, 98%, 39%)",
+    "id": "budget_travel_001",
+    "userId": "1767901476705",
+    "spent": 0
+  },
+  {
+    "category": "Education",
+    "limit": 500,
+    "icon": "book",
+    "color": "hsl(262, 83%, 58%)",
+    "id": "budget_education_001",
+    "userId": "1767901476705",
+    "spent": 0
+  }
+]
