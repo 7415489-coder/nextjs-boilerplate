@@ -16,7 +16,7 @@ const updateBudgetSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -24,7 +24,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const budget = await getBudgetById(session.user.id, params.id);
+    const { id } = await params;
+    const budget = await getBudgetById(session.user.id, id);
     if (!budget) {
       return NextResponse.json({ error: "Budget not found" }, { status: 404 });
     }
@@ -41,7 +42,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -50,7 +51,8 @@ export async function PUT(
     }
 
     // Check if budget exists and belongs to user
-    const existingBudget = await getBudgetById(session.user.id, params.id);
+    const { id } = await params;
+    const existingBudget = await getBudgetById(session.user.id, id);
     if (!existingBudget) {
       return NextResponse.json({ error: "Budget not found" }, { status: 404 });
     }
@@ -78,7 +80,7 @@ export async function PUT(
       updates.color = validatedData.color;
     }
 
-    const updatedBudget = await updateBudget(session.user.id, params.id, updates);
+    const updatedBudget = await updateBudget(session.user.id, id, updates);
     if (!updatedBudget) {
       return NextResponse.json({ error: "Failed to update budget" }, { status: 500 });
     }
@@ -102,7 +104,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -111,12 +113,13 @@ export async function DELETE(
     }
 
     // Check if budget exists and belongs to user
-    const existingBudget = await getBudgetById(session.user.id, params.id);
+    const { id } = await params;
+    const existingBudget = await getBudgetById(session.user.id, id);
     if (!existingBudget) {
       return NextResponse.json({ error: "Budget not found" }, { status: 404 });
     }
 
-    const deleted = await deleteBudget(session.user.id, params.id);
+    const deleted = await deleteBudget(session.user.id, id);
     if (!deleted) {
       return NextResponse.json({ error: "Failed to delete budget" }, { status: 500 });
     }

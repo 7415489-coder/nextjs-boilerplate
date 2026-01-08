@@ -205,21 +205,18 @@ Requirements:
     // Return fallback insights if API call fails
     const fallbackInsights: Insight[] = [
       {
-        id: 1,
         type: "prediction",
         title: "Savings boost if spending cut",
         description: "If you cut Shopping 50% and Food 30%, you'd save ~$2,082/mo, raising savings from $1,157 to ~$3,239/mo (savings rate ≈28.2%), adding ≈$24,984/yr.",
         color: "text-income",
       },
       {
-        id: 2,
         type: "warning",
         title: "Major overspending in key categories",
         description: "Food (1595% of budget), Shopping (1527.5%) and Housing (1166.7%) total ≈$7,968/mo (~77% of expenses). With only a 10.1% savings rate, an income drop would quickly deplete savings.",
         color: "text-warning",
       },
       {
-        id: 3,
         type: "tip",
         title: "3-step plan to reclaim ~$2,202/mo",
         description: "Target Shopping $1,500/mo (-$1,555) and Food $1,200/mo (-$647). Automate the ~$2,202/mo saved to a separate account, negotiate bills, and set weekly spending caps to push savings toward ~29%.",

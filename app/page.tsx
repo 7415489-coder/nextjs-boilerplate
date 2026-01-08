@@ -144,7 +144,7 @@ export default function Home() {
             title="Savings Rate"
             value={`${savingsRate.toFixed(1)}%`}
             change={savingsRate >= 30 ? "Above target (30%)" : savingsRate >= 0 ? "Below target (30%)" : "Negative savings"}
-            changeType={savingsRate >= 30 ? "positive" : savingsRate >= 0 ? "default" : "negative"}
+            changeType={savingsRate >= 30 ? "positive" : savingsRate >= 0 ? "neutral" : "negative"}
             icon={PiggyBank}
             delay={0.15}
           />

@@ -19,7 +19,7 @@ const updateTransactionSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -27,7 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const transaction = await getTransactionById(session.user.id, params.id);
+    const { id } = await params;
+    const transaction = await getTransactionById(session.user.id, id);
     if (!transaction) {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
@@ -44,7 +45,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -53,7 +54,8 @@ export async function PUT(
     }
 
     // Check if transaction exists and belongs to user
-    const existingTransaction = await getTransactionById(session.user.id, params.id);
+    const { id } = await params;
+    const existingTransaction = await getTransactionById(session.user.id, id);
     if (!existingTransaction) {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
@@ -126,7 +128,7 @@ export async function PUT(
       updates.notes = validatedData.notes?.trim();
     }
 
-    const updatedTransaction = await updateTransaction(session.user.id, params.id, updates);
+    const updatedTransaction = await updateTransaction(session.user.id, id, updates);
     if (!updatedTransaction) {
       return NextResponse.json({ error: "Failed to update transaction" }, { status: 500 });
     }
@@ -150,7 +152,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -159,12 +161,13 @@ export async function DELETE(
     }
 
     // Check if transaction exists and belongs to user
-    const existingTransaction = await getTransactionById(session.user.id, params.id);
+    const { id } = await params;
+    const existingTransaction = await getTransactionById(session.user.id, id);
     if (!existingTransaction) {
       return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
 
-    const deleted = await deleteTransaction(session.user.id, params.id);
+    const deleted = await deleteTransaction(session.user.id, id);
     if (!deleted) {
       return NextResponse.json({ error: "Failed to delete transaction" }, { status: 500 });
     }
