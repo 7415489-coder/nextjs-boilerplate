@@ -1,11 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bell, Settings, User, Sparkles } from "lucide-react";
+import { Bell, Settings, User, Sparkles, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 const navItems = [
   { name: "Dashboard", path: "/" },
@@ -17,6 +27,28 @@ const navItems = [
 
 export const Header = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirect: false });
+      toast.success("Signed out successfully");
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to sign out");
+    }
+  };
+
+  const getUserInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <motion.header
@@ -63,9 +95,41 @@ export const Header = () => {
         <Button variant="ghost" size="icon" className="text-muted-foreground">
           <Settings className="w-5 h-5" />
         </Button>
-        <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center ml-2">
-          <User className="w-5 h-5 text-primary-foreground" />
-        </div>
+        {session?.user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-9 w-9 rounded-full ml-2"
+              >
+                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold text-sm">
+                  {getUserInitials(session.user.name || session.user.email)}
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">
+                    {session.user.name}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {session.user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center ml-2">
+            <User className="w-5 h-5 text-primary-foreground" />
+          </div>
+        )}
       </div>
     </motion.header>
   );

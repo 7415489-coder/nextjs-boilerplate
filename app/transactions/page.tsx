@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Search, Filter, ArrowUpDown } from "lucide-react";
+import { Plus, Search, Filter, ArrowUpDown, Loader2 } from "lucide-react";
 import { Header } from "@/components/dashboard/Header";
 import { TransactionTable, type Transaction } from "@/components/transactions/TransactionTable";
 import { AddTransactionDialog } from "@/components/transactions/AddTransactionDialog";
 import { TransactionFilters } from "@/components/transactions/TransactionFilters";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -17,21 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const initialTransactions: Transaction[] = [
-  { id: "1", name: "Salary", category: "Income", amount: 5000, date: "2024-01-15", type: "income" },
-  { id: "2", name: "Grocery Shopping", category: "Food & Dining", amount: -156.32, date: "2024-01-14", type: "expense" },
-  { id: "3", name: "Netflix Subscription", category: "Entertainment", amount: -15.99, date: "2024-01-13", type: "expense" },
-  { id: "4", name: "Gas Station", category: "Transportation", amount: -45.00, date: "2024-01-12", type: "expense" },
-  { id: "5", name: "Freelance Project", category: "Income", amount: 1200, date: "2024-01-11", type: "income" },
-  { id: "6", name: "Electric Bill", category: "Utilities", amount: -89.50, date: "2024-01-10", type: "expense" },
-  { id: "7", name: "Restaurant Dinner", category: "Food & Dining", amount: -67.80, date: "2024-01-09", type: "expense" },
-  { id: "8", name: "Online Shopping", category: "Shopping", amount: -234.99, date: "2024-01-08", type: "expense" },
-  { id: "9", name: "Investment Return", category: "Income", amount: 350, date: "2024-01-07", type: "income" },
-  { id: "10", name: "Gym Membership", category: "Health", amount: -49.99, date: "2024-01-06", type: "expense" },
-];
-
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [budgets, setBudgets] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -39,8 +29,51 @@ export default function TransactionsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const { toast } = useToast();
+
+  // Fetch transactions and budgets on mount
+  useEffect(() => {
+    fetchTransactions();
+    fetchBudgets();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/transactions");
+      if (!response.ok) {
+        throw new Error("Failed to fetch transactions");
+      }
+      const data = await response.json();
+      setTransactions(data);
+    } catch (error) {
+      console.error("Error fetching transactions:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load transactions. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchBudgets = async () => {
+    try {
+      const response = await fetch("/api/budgets");
+      if (!response.ok) {
+        throw new Error("Failed to fetch budgets");
+      }
+      const data = await response.json();
+      setBudgets(data);
+    } catch (error) {
+      console.error("Error fetching budgets:", error);
+      // Don't show error toast for budgets, just log it
+    }
+  };
 
   const categories = [...new Set(transactions.map((t) => t.category))];
+  const budgetCategories = budgets.map((b) => b.category);
 
   const filteredTransactions = transactions
     .filter((t) => {
@@ -69,27 +102,114 @@ export default function TransactionsPage() {
       }
     });
 
-  const handleAddTransaction = (transaction: Omit<Transaction, "id">) => {
-    const newTransaction = {
-      ...transaction,
-      id: Date.now().toString(),
-    };
-    setTransactions([newTransaction, ...transactions]);
-    setIsAddDialogOpen(false);
+  const handleAddTransaction = async (transaction: Omit<Transaction, "id">) => {
+    try {
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: transaction.name,
+          category: transaction.category,
+          amount: Math.abs(transaction.amount),
+          date: transaction.date,
+          type: transaction.type,
+          notes: transaction.notes,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create transaction");
+      }
+
+      const newTransaction = await response.json();
+      setTransactions([newTransaction, ...transactions]);
+      setIsAddDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Transaction added successfully",
+      });
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create transaction",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditTransaction = (transaction: Omit<Transaction, "id">) => {
+  const handleEditTransaction = async (transaction: Omit<Transaction, "id">) => {
     if (!editingTransaction) return;
-    setTransactions(
-      transactions.map((t) =>
-        t.id === editingTransaction.id ? { ...transaction, id: t.id } : t
-      )
-    );
-    setEditingTransaction(null);
+
+    try {
+      const response = await fetch(`/api/transactions/${editingTransaction.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: transaction.name,
+          category: transaction.category,
+          amount: Math.abs(transaction.amount),
+          date: transaction.date,
+          type: transaction.type,
+          notes: transaction.notes,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update transaction");
+      }
+
+      const updatedTransaction = await response.json();
+      setTransactions(
+        transactions.map((t) =>
+          t.id === editingTransaction.id ? updatedTransaction : t
+        )
+      );
+      setEditingTransaction(null);
+      toast({
+        title: "Success",
+        description: "Transaction updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update transaction",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id));
+  const handleDeleteTransaction = async (id: string) => {
+    try {
+      const response = await fetch(`/api/transactions/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete transaction");
+      }
+
+      setTransactions(transactions.filter((t) => t.id !== id));
+      toast({
+        title: "Success",
+        description: "Transaction deleted successfully",
+      });
+    } catch (error) {
+      console.error("Error deleting transaction:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete transaction",
+        variant: "destructive",
+      });
+    }
   };
 
   const totalIncome = transactions
@@ -217,26 +337,34 @@ export default function TransactionsPage() {
           </div>
 
           {/* Transactions Table */}
-          <TransactionTable
-            transactions={filteredTransactions}
-            onEdit={setEditingTransaction}
-            onDelete={handleDeleteTransaction}
-          />
-
-          {filteredTransactions.length === 0 && (
-            <div className="text-center py-12 bg-card rounded-xl border border-border">
-              <p className="text-muted-foreground">No transactions found</p>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setSearchQuery("");
-                  setTypeFilter("all");
-                  setCategoryFilter("all");
-                }}
-              >
-                Clear filters
-              </Button>
+          {loading ? (
+            <div className="flex items-center justify-center py-12 bg-card rounded-xl border border-border">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             </div>
+          ) : (
+            <>
+              <TransactionTable
+                transactions={filteredTransactions}
+                onEdit={setEditingTransaction}
+                onDelete={handleDeleteTransaction}
+              />
+
+              {filteredTransactions.length === 0 && (
+                <div className="text-center py-12 bg-card rounded-xl border border-border">
+                  <p className="text-muted-foreground">No transactions found</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setTypeFilter("all");
+                      setCategoryFilter("all");
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </motion.div>
       </main>
@@ -246,7 +374,7 @@ export default function TransactionsPage() {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onSubmit={handleAddTransaction}
-        categories={categories}
+        budgetCategories={budgetCategories}
       />
 
       {/* Edit Transaction Dialog */}
@@ -254,7 +382,7 @@ export default function TransactionsPage() {
         open={!!editingTransaction}
         onOpenChange={(open) => !open && setEditingTransaction(null)}
         onSubmit={handleEditTransaction}
-        categories={categories}
+        budgetCategories={budgetCategories}
         initialData={editingTransaction || undefined}
         isEditing
       />

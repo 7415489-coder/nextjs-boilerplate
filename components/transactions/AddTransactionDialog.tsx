@@ -56,33 +56,19 @@ interface AddTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (transaction: Omit<Transaction, "id">) => void;
-  categories: string[];
+  budgetCategories: string[];
   initialData?: Transaction;
   isEditing?: boolean;
 }
-
-const defaultCategories = [
-  "Income",
-  "Food & Dining",
-  "Entertainment",
-  "Transportation",
-  "Utilities",
-  "Shopping",
-  "Health",
-  "Education",
-  "Travel",
-  "Other",
-];
 
 export const AddTransactionDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  categories,
+  budgetCategories,
   initialData,
   isEditing = false,
 }: AddTransactionDialogProps) => {
-  const allCategories = [...new Set([...defaultCategories, ...categories])];
 
   const form = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
@@ -95,6 +81,19 @@ export const AddTransactionDialog = ({
       notes: "",
     },
   });
+
+  const transactionType = form.watch("type");
+  const INCOME_CATEGORY = "Income";
+
+  // Auto-set category to "Income" when type changes to income
+  useEffect(() => {
+    if (transactionType === "income") {
+      const currentCategory = form.getValues("category");
+      if (currentCategory !== INCOME_CATEGORY) {
+        form.setValue("category", INCOME_CATEGORY);
+      }
+    }
+  }, [transactionType, form]);
 
   useEffect(() => {
     if (initialData) {
@@ -219,26 +218,61 @@ export const AddTransactionDialog = ({
             <FormField
               control={form.control}
               name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {allCategories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const isIncome = transactionType === "income";
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={isIncome ? INCOME_CATEGORY : field.value} 
+                      disabled={isIncome || (budgetCategories.length === 0 && !isIncome)}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue 
+                            placeholder={
+                              isIncome 
+                                ? INCOME_CATEGORY 
+                                : budgetCategories.length === 0 
+                                  ? "No budgets available" 
+                                  : "Select a category"
+                            } 
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isIncome ? (
+                          <SelectItem value={INCOME_CATEGORY}>
+                            {INCOME_CATEGORY}
+                          </SelectItem>
+                        ) : budgetCategories.length === 0 ? (
+                          <SelectItem value="_none" disabled>
+                            Create a budget first to add expense transactions
+                          </SelectItem>
+                        ) : (
+                          budgetCategories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {isIncome ? (
+                      <p className="text-sm text-muted-foreground">
+                        Income transactions use the "Income" category automatically.
+                      </p>
+                    ) : budgetCategories.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        You need to create a budget before adding expense transactions.
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField

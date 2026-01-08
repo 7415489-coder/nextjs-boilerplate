@@ -32,6 +32,8 @@ const categoryOptions = [
   { name: "Subscriptions", icon: "repeat", color: "hsl(270, 70%, 55%)" },
 ];
 
+const INCOME_CATEGORY = "Income";
+
 interface AddBudgetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,7 +52,7 @@ export const AddBudgetDialog = ({
   const { toast } = useToast();
 
   const availableCategories = categoryOptions.filter(
-    (c) => !existingCategories.includes(c.name)
+    (c) => !existingCategories.includes(c.name) && c.name !== INCOME_CATEGORY
   );
 
   const handleAdd = () => {

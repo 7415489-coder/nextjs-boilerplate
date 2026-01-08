@@ -1,61 +1,47 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShoppingBag, Coffee, Home, Car, Zap, Utensils } from "lucide-react";
+import { ShoppingBag, Coffee, Home, Car, Zap, Utensils, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, formatDistanceToNow } from "date-fns";
+import type { Transaction } from "@/components/transactions/TransactionTable";
 
-const transactions = [
-  {
-    id: 1,
-    name: "Grocery Store",
-    category: "Shopping",
-    amount: -89.5,
-    date: "Today",
-    icon: ShoppingBag,
-  },
-  {
-    id: 2,
-    name: "Salary Deposit",
-    category: "Income",
-    amount: 4500.0,
-    date: "Yesterday",
-    icon: Zap,
-  },
-  {
-    id: 3,
-    name: "Coffee Shop",
-    category: "Food & Drinks",
-    amount: -12.4,
-    date: "Yesterday",
-    icon: Coffee,
-  },
-  {
-    id: 4,
-    name: "Rent Payment",
-    category: "Housing",
-    amount: -1200.0,
-    date: "Jan 1",
-    icon: Home,
-  },
-  {
-    id: 5,
-    name: "Gas Station",
-    category: "Transportation",
-    amount: -45.0,
-    date: "Jan 1",
-    icon: Car,
-  },
-  {
-    id: 6,
-    name: "Restaurant",
-    category: "Food & Drinks",
-    amount: -67.8,
-    date: "Dec 31",
-    icon: Utensils,
-  },
-];
+const categoryIconMap: Record<string, typeof ShoppingBag> = {
+  Shopping: ShoppingBag,
+  "Food & Dining": Coffee,
+  "Food & Drinks": Coffee,
+  Housing: Home,
+  Transportation: Car,
+  Income: Zap,
+  Utilities: Zap,
+  Entertainment: Utensils,
+};
 
-export const TransactionList = () => {
+const getCategoryIcon = (category: string) => {
+  return categoryIconMap[category] || ShoppingBag;
+};
+
+interface TransactionListProps {
+  transactions: Transaction[];
+  loading?: boolean;
+}
+
+export const TransactionList = ({ transactions, loading = false }: TransactionListProps) => {
+  // Get the 6 most recent transactions
+  const recentTransactions = transactions
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 6);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) return "Today";
+    if (diffInDays === 1) return "Yesterday";
+    if (diffInDays < 7) return formatDistanceToNow(date, { addSuffix: false });
+    return format(date, "MMM d");
+  };
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -76,36 +62,49 @@ export const TransactionList = () => {
       </div>
 
       <div className="space-y-3">
-        {transactions.map((transaction, index) => (
-          <motion.div
-            key={transaction.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
-            className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors duration-200"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-accent">
-                <transaction.icon className="w-4 h-4 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">{transaction.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {transaction.category} • {transaction.date}
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : recentTransactions.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            No transactions yet
+          </p>
+        ) : (
+          recentTransactions.map((transaction, index) => {
+            const Icon = getCategoryIcon(transaction.category);
+            return (
+              <motion.div
+                key={transaction.id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors duration-200"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-accent">
+                    <Icon className="w-4 h-4 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">{transaction.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {transaction.category} • {formatDate(transaction.date)}
+                    </p>
+                  </div>
+                </div>
+                <p
+                  className={cn(
+                    "font-semibold",
+                    transaction.type === "income" ? "text-green-600" : "text-foreground"
+                  )}
+                >
+                  {transaction.type === "income" ? "+" : ""}
+                  ${Math.abs(transaction.amount).toFixed(2)}
                 </p>
-              </div>
-            </div>
-            <p
-              className={cn(
-                "font-semibold",
-                transaction.amount > 0 ? "text-income" : "text-foreground"
-              )}
-            >
-              {transaction.amount > 0 ? "+" : ""}
-              ${Math.abs(transaction.amount).toFixed(2)}
-            </p>
-          </motion.div>
-        ))}
+              </motion.div>
+            );
+          })
+        )}
       </div>
     </motion.div>
   );

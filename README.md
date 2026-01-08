@@ -1,8 +1,27 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Features
+
+- **User Authentication**: Complete email/password authentication system with NextAuth.js
+- **Protected Routes**: Middleware-based route protection
+- **Sign Up & Login**: Beautiful authentication pages with form validation
+- **Session Management**: JWT-based session handling
+
 ## Getting Started
 
-First, run the development server:
+First, set up your environment variables. Create a `.env.local` file in the root directory:
+
+```bash
+NEXTAUTH_SECRET=your-secret-key-change-in-production
+NEXTAUTH_URL=http://localhost:3000
+```
+
+To generate a secure secret, you can use:
+```bash
+openssl rand -base64 32
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -15,6 +34,23 @@ bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+## Authentication
+
+The application includes a complete authentication system:
+
+- **Sign Up**: Visit `/signup` to create a new account
+- **Login**: Visit `/login` to sign in to your account
+- **Protected Routes**: All routes except `/login` and `/signup` require authentication
+- **User Profile**: Click on your avatar in the header to see your profile and logout
+
+### User Storage
+
+Currently, the application uses an in-memory user store (defined in `lib/auth.ts`). For production use, you should replace this with a proper database solution such as:
+- PostgreSQL with Prisma
+- MongoDB
+- Supabase
+- Firebase
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
