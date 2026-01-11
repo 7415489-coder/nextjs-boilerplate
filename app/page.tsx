@@ -39,16 +39,16 @@ export default function Home() {
 
   // Calculate metrics from transactions
   const totalBalance = transactions.reduce((sum, t) => sum + t.amount, 0);
-  
+
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  
+
   const monthlyIncome = transactions
     .filter((t) => {
       const date = new Date(t.date);
-      return t.type === "income" && 
-             date.getMonth() === currentMonth && 
-             date.getFullYear() === currentYear;
+      return t.type === "income" &&
+        date.getMonth() === currentMonth &&
+        date.getFullYear() === currentYear;
     })
     .reduce((sum, t) => sum + t.amount, 0);
 
@@ -56,15 +56,15 @@ export default function Home() {
     transactions
       .filter((t) => {
         const date = new Date(t.date);
-        return t.type === "expense" && 
-               date.getMonth() === currentMonth && 
-               date.getFullYear() === currentYear;
+        return t.type === "expense" &&
+          date.getMonth() === currentMonth &&
+          date.getFullYear() === currentYear;
       })
       .reduce((sum, t) => sum + t.amount, 0)
   );
 
-  const savingsRate = monthlyIncome > 0 
-    ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 
+  const savingsRate = monthlyIncome > 0
+    ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
     : 0;
 
   // Get previous month for comparison
@@ -74,9 +74,9 @@ export default function Home() {
   const previousMonthIncome = transactions
     .filter((t) => {
       const date = new Date(t.date);
-      return t.type === "income" && 
-             date.getMonth() === previousMonth && 
-             date.getFullYear() === previousYear;
+      return t.type === "income" &&
+        date.getMonth() === previousMonth &&
+        date.getFullYear() === previousYear;
     })
     .reduce((sum, t) => sum + t.amount, 0);
 
@@ -84,9 +84,9 @@ export default function Home() {
     transactions
       .filter((t) => {
         const date = new Date(t.date);
-        return t.type === "expense" && 
-               date.getMonth() === previousMonth && 
-               date.getFullYear() === previousYear;
+        return t.type === "expense" &&
+          date.getMonth() === previousMonth &&
+          date.getFullYear() === previousYear;
       })
       .reduce((sum, t) => sum + t.amount, 0)
   );
@@ -102,7 +102,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
@@ -155,15 +155,16 @@ export default function Home() {
           <SpendingChart transactions={transactions} loading={loading} />
         </div>
 
-        {/* Secondary Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div>
+        {/* Two Section Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Small Section - AI Insights */}
+          <div className="lg:col-span-1">
             <AIInsights />
           </div>
-          <div>
+
+          {/* Large Section - Category and Transactions */}
+          <div className="lg:col-span-3 flex flex-col gap-6">
             <CategoryBreakdown transactions={transactions} loading={loading} />
-          </div>
-          <div>
             <TransactionList transactions={transactions} loading={loading} />
           </div>
         </div>

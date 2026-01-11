@@ -28,13 +28,13 @@ export const CategoryBreakdown = ({ transactions, loading = false }: CategoryBre
   // Calculate category breakdown from transactions (only expenses)
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
-  
+
   const categoryTotals = transactions
     .filter((t) => {
       const date = new Date(t.date);
-      return t.type === "expense" && 
-             date.getMonth() === currentMonth && 
-             date.getFullYear() === currentYear;
+      return t.type === "expense" &&
+        date.getMonth() === currentMonth &&
+        date.getFullYear() === currentYear;
     })
     .reduce((acc, t) => {
       const category = t.category;
@@ -77,7 +77,7 @@ export const CategoryBreakdown = ({ transactions, loading = false }: CategoryBre
         </div>
       ) : (
         <div className="flex items-center gap-6">
-          <div className="h-[180px] w-[180px]">
+          <div className="h-[180px] w-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
